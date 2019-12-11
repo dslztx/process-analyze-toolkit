@@ -1,0 +1,19 @@
+#!/bin/bash 
+
+BIN_DIR="$(dirname -- "$0")"
+
+if [ -z "$1" ];then
+  echo "specify workspace"
+  exit 1
+fi
+
+WORKDIR=$1
+
+my-init
+
+$BIN_DIR/../lib/mat_1.8.0/ParseHeapDump.sh -vm $BIN_DIR/../lib/jdk1.8/bin $WORKDIR/jmap.*.dump
+
+mkdir -p $WORKDIR/transfer
+
+mv $WORKDIR/*.zip $WORKDIR/transfer/
+mv $WORKDIR/*.threads $WORKDIR/transfer/

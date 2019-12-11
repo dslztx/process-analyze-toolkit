@@ -1,0 +1,29 @@
+#!/bin/bash
+
+BIN_DIR="$(dirname -- "$0")"
+
+export LC_ALL=C
+
+if [ -z "$1" ];then
+  echo "specify PID"
+  exit 1
+fi
+
+if [ -z "$2" ];then
+  echo "specify jstat option"
+  exit 1
+fi
+
+PID=$1
+
+XOPTION=$2
+
+OUTPUT=$(pwd)
+
+mkdir -p $OUTPUT/$PID
+
+NOWTIME=$(date +%Y%m%d%H%M%S)
+
+my-init
+
+$BIN_DIR/../lib/jdk1.8/bin/jstat -$XOPTION -t $PID > $OUTPUT/$PID/jstat-"$XOPTION"."$NOWTIME".dump

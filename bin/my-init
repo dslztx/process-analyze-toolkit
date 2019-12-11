@@ -1,0 +1,17 @@
+#!/bin/bash 
+
+BIN_DIR="$(dirname -- "$0")"
+
+cd $BIN_DIR/../lib
+
+if [ ! -d "jdk1.8" ];then
+
+        cat jdk1.8_part_* >> jdk1.8.tar.gz
+        tar -xzvf jdk1.8.tar.gz
+fi
+
+if [ ! -d "mat_1.8.0" ];then
+
+        cat mat_part_* >> mat_1.8.0.tar.gz
+        tar -xzvf mat_1.8.0.tar.gz
+fi

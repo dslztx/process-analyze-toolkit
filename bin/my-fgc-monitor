@@ -1,0 +1,80 @@
+#!/bin/bash 
+
+BIN_DIR="$(dirname -- "$0")"
+
+export LC_ALL=C
+
+if [ -z "$1" ];then
+  echo "specify PID"
+  exit 1
+fi
+
+PID=$1
+
+OUTPUT=$(pwd)
+
+mkdir -p $OUTPUT/$PID
+
+OUTPUTFILE="$OUTPUT/$PID/fgc-monitor.out"
+
+touch $OUTPUTFILE
+
+function jud(){
+
+  $BIN_DIR/my-init
+
+  JSTAT_RESULT=$($BIN_DIR/../lib/jdk1.8/bin/jstat -gcutil -t $PID 1000 10)
+
+  linenum=0
+
+  index=0
+
+  declare -a A
+
+  while read line ; do
+    
+    let linenum++
+
+    if [ $linenum -eq 1 ];then
+      continue
+    fi
+
+    element=`echo $line | awk -F ' ' '{print $(NF-2)}'`
+    A[$index]=$element
+
+    let index++
+
+  done <<< "$JSTAT_RESULT"
+
+  AA=($(echo ${A[*]} | sed 's/ /\n/g' | sort | uniq))
+
+  echo "original FGC array is: "${A[*]} >> $OUTPUTFILE
+  echo "FGC array after deduplication is: "${AA[*]} >> $OUTPUTFILE
+
+  RESULT=${#AA[*]}
+
+}
+
+while true
+do
+
+  NOWTIME=$(date +%Y%m%d%H%M%S)
+  
+  echo "now time is: "$NOWTIME >> $OUTPUTFILE
+
+  jud
+
+  if [ $RESULT -gt 3 ]; then
+    echo "face consecutive FGC probably, dump" >> $OUTPUTFILE
+    $BIN_DIR/my-dump $PID
+
+    exit 0
+  else
+    echo "no consecutive FGC probably" >> $OUTPUTFILE
+  fi
+
+  echo "" >> $OUTPUTFILE
+
+  sleep 1m
+
+done

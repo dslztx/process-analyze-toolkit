@@ -1,0 +1,22 @@
+#!/bin/bash
+
+BIN_DIR="$(dirname -- "$0")"
+
+export LC_ALL=C
+
+if [ -z "$1" ];then
+  echo "specify PID"
+  exit 1
+fi
+
+PID=$1
+
+OUTPUT=$(pwd)
+
+mkdir -p $OUTPUT/$PID
+
+NOWTIME=$(date +%Y%m%d%H%M%S)
+
+my-init
+
+nohup $BIN_DIR/../lib/jdk1.8/bin/jstat -gcutil -t $PID 1000 > $OUTPUT/$PID/jstat."$NOWTIME".dump &

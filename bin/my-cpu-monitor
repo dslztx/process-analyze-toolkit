@@ -1,0 +1,81 @@
+#!/bin/bash
+
+BIN_DIR="$(dirname -- "$0")"
+
+export LC_ALL=C
+
+if [ -z "$1" ];then
+  echo "specify PID"
+  exit 1
+fi
+
+if [ -z "$2" ];then
+  echo "specify CPU limit"
+  exit 1
+fi
+
+PID=$1
+CPU_LIMIT=$2
+
+OUTPUT=$(pwd)
+
+mkdir -p $OUTPUT/$PID
+
+OUTPUTFILE="$OUTPUT/$PID/cpu-monitor.out"
+
+touch $OUTPUTFILE
+
+function jud(){
+
+  RESULT="false"
+
+  CPU_OCCUPY=`top -b -n 1 -p $PID | tail -n 1 | awk -F ' ' '{print $(NF-3)}'`
+    
+  echo "CPU_OCCUPY is: "$CPU_OCCUPY >> $OUTPUTFILE
+
+  if [ `echo "$CPU_OCCUPY > $CPU_LIMIT" | bc` -eq 1 ]; then
+
+    for x in 1 2 3
+    do
+
+      CPU_OCCUPY=`top -b -n 1 -p $PID | tail -n 1 | awk -F ' ' '{print $(NF-3)}'`
+
+      echo "CPU_OCCUPY is: "$CPU_OCCUPY >> $OUTPUTFILE
+
+      if [ `echo "$CPU_OCCUPY <= $CPU_LIMIT" | bc` -eq 1 ]; then
+        return 0
+      fi
+
+      sleep 10s
+    done
+
+    RESULT="true"
+
+  fi 
+
+}
+
+while true 
+do 
+
+  NOWTIME=$(date +%Y%m%d%H%M%S)
+  
+  echo "now time is: "$NOWTIME >> $OUTPUTFILE
+
+  jud
+
+  if [ "$RESULT" = "true" ]; then
+    echo "consecutive HIGH CPU probably, dump" >> $OUTPUTFILE
+
+    $BIN_DIR/my-dump $PID
+
+    exit 0
+  else
+    echo "no consecutive HIGH CPU probably" >> $OUTPUTFILE
+  fi
+
+  echo "" >> $OUTPUTFILE
+
+  sleep 3m
+
+done
