@@ -8,4 +8,4 @@ WORK_DIR=$(pwd)
 
 cd ..
 
-tar --exclude='.git' -czvf process_analyze_toolkit.tar.gz process_analyze_toolkit
+tar --exclude='.git' -czvf process-analyze-toolkit.tar.gz process-analyze-toolkit
